@@ -1,0 +1,10 @@
+name: pulumi-ts-aws-asg-ec2-webserver
+description: Demo web server running on AWS EC2 instances behind an Auto Scaling Group
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript
