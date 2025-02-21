@@ -43,14 +43,16 @@ const httpsIngress = variables.create_dns_record ? securityGroupLoadBalancer.the
 
 
 // Add HTTP ingress rule to the security group if DNS is not enabled
-const httpIngress = !variables.create_dns_record ? securityGroupLoadBalancer.then(sg => new aws.ec2.SecurityGroupRule("http-ingress", {
+const httpIngress = securityGroupLoadBalancer.then(sg => new aws.ec2.SecurityGroupRule("http-ingress", {
     type: "ingress",
     fromPort: 80,
     toPort: 80,
     protocol: "tcp",
     cidrBlocks: ["0.0.0.0/0"],
-    securityGroupId: pulumi.output(securityGroupLoadBalancer).apply(sg => sg.id),
-})) : null;
+    securityGroupId: pulumi.output(sg).apply(sg => sg.id),
+}));
+
+const egressRuleLoadBalancer = securityGroupLoadBalancer.then(sg => new aws.ec2.SecurityGroupRule("egress-lb", egressRule));
 
 const egressRule: aws.ec2.SecurityGroupRuleArgs = {
     type: "egress",
@@ -144,17 +146,20 @@ const instanceProfile = new aws.iam.InstanceProfile("webserver-profile", {
     tags: standard_tags
 });
 
+// Store user data script
+const userDataScript = `#!/bin/bash
+dnf update -y
+dnf install -y httpd
+systemctl start httpd
+systemctl enable httpd
+echo "<h1>Hello World from $(hostname -f)</h1>" > /var/www/html/index.html`;
+
+
 // Launch template
 const launch_template = ami.then(ami => new aws.ec2.LaunchTemplate("launch-template", {
     imageId: ami.id,
     instanceType: variables.instance_type,
-    userData: `#!/bin/bash
-    dnf update -y
-    dnf install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<h1>Hello World from $(hostname -f)</h1>" > /var/www/html/index.html`,
-
+    userData: Buffer.from(userDataScript).toString('base64'),
     iamInstanceProfile: {
         name: instanceProfile.name
     },
@@ -166,7 +171,6 @@ const launch_template = ami.then(ami => new aws.ec2.LaunchTemplate("launch-templ
     }],
     tags: standard_tags
 }));
-
 
 // Convert standard_tags dictionary to a list of dictionaries with propagate_at_launch key
 const asgTags = Object.keys(standard_tags).map(key => {
@@ -216,19 +220,23 @@ const certificate = variables.create_dns_record ? new aws.acm.Certificate("certi
 
 // Get route53 zone id from dns domain
 const zone = variables.create_dns_record ? aws.route53.getZone({
-    name: variables.dns_name
+    name: variables.dns_domain,
+    privateZone: false
 }) : null;
 
 // Certificate Validation
 const certificate_validation = variables.create_dns_record && certificate ?
-    new aws.route53.Record("certificate-validation", {
-        name: certificate.domainValidationOptions[0].resourceRecordName,
-        type: certificate.domainValidationOptions[0].resourceRecordType,
-        zoneId: zone ? pulumi.output(zone).apply(zone => zone.zoneId) : "",
-        records: [certificate.domainValidationOptions[0].resourceRecordValue],
-        ttl: 60
-    }, {
-        dependsOn: [certificate]
+    certificate.domainValidationOptions.apply(options => {
+        if (options.length === 0) {
+            throw new Error("No domain validation options available");
+        }
+        return new aws.route53.Record("certificate-validation", {
+            name: options[0].resourceRecordName,
+            type: options[0].resourceRecordType,
+            zoneId: zone ? pulumi.output(zone).apply(zone => zone.zoneId) : "",
+            records: [options[0].resourceRecordValue],
+            ttl: 60
+        });
     }) : null;
 
 // Certificate Validation DNS Record

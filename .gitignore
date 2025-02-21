@@ -1,3 +1,4 @@
 /bin/
 /node_modules/
-*.env
+*.envPulumi.pulumi-ts-aws-asg-ec2-webserver.yaml
+Pulumi.pulumi-ts-aws-asg-ec2-webserver.yaml
