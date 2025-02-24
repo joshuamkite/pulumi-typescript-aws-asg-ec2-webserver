@@ -1,6 +1,6 @@
 # Pulumi AWS Auto Scaling Group TypeScript
 
-This is a TypeScript port of my [pulumi-aws-asg](https://github.com/joshuamkite/pulumi-aws-asg) Python project.
+This is a TypeScript port of my [pulumi-aws-asg](https://github.com/joshuamkite/pulumi-aws-asg) Python project. There is now also a [C# version](https://github.com/joshuamkite/pulumi-csharp-aws-asg-ec2-webserver)
 
 ## Overview
 
