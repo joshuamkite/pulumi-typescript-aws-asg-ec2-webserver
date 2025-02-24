@@ -134,37 +134,38 @@ This TypeScript port follows the same architecture as the original Python projec
 via `pulumi stack` from sample deployment
 
 ```bash
-Current stack resources (26):
+Current stack resources (27):
     TYPE                                                    NAME
     pulumi:pulumi:Stack                                     pulumi-ts-aws-asg-ec2-webserver-pulumi-ts-aws-asg-ec2-webserver
     ├─ aws:iam/role:Role                                    webserver-role
-    ├─ aws:acm/certificate:Certificate                      certificate
-    ├─ aws:iam/instanceProfile:InstanceProfile              webserver-profile
-    ├─ aws:iam/rolePolicyAttachment:RolePolicyAttachment    webserver-policy
+    ├─ aws:lb/targetGroup:TargetGroup                       webserver-tg
     ├─ aws:ec2/securityGroup:SecurityGroup                  load-balancer
     ├─ aws:ec2/securityGroup:SecurityGroup                  ec2
-    ├─ aws:lb/targetGroup:TargetGroup                       webserver-tg
-    ├─ aws:ec2/securityGroupRule:SecurityGroupRule          https-ingress
+    ├─ aws:acm/certificate:Certificate                      certificate
+    ├─ aws:iam/rolePolicyAttachment:RolePolicyAttachment    webserver-policy
     ├─ aws:ec2/securityGroupRule:SecurityGroupRule          egress-lb
+    ├─ aws:ec2/securityGroupRule:SecurityGroupRule          http-ingress
+    ├─ aws:iam/instanceProfile:InstanceProfile              webserver-profile
+    ├─ aws:ec2/securityGroupRule:SecurityGroupRule          https-ingress
     ├─ aws:ec2/securityGroupRule:SecurityGroupRule          egress-ec2
     ├─ aws:ec2/securityGroupRule:SecurityGroupRule          http-ingress-ec2
-    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ec2-messages-endpoint
-    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ssm-endpoint
-    ├─ aws:lb/loadBalancer:LoadBalancer                     webserver-lb
-    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ssm-messages-endpoint
+    ├─ aws:ec2/securityGroupRule:SecurityGroupRule          ssm-ingress-ec2
     ├─ aws:ec2/launchTemplate:LaunchTemplate                launch-template
-    ├─ aws:route53/record:Record                            certificate-validation
-    ├─ aws:lb/listener:Listener                             https-listener
-    ├─ aws:lb/listener:Listener                             http-redirect-listener
-    ├─ aws:acm/certificateValidation:CertificateValidation  certificate-validation-dns-record
-    ├─ aws:route53/record:Record                            dns-record
     ├─ aws:autoscaling/group:Group                          webserver-asg
     ├─ aws:autoscaling/attachment:Attachment                asg-attachment
-    ├─ aws:ec2/securityGroupRule:SecurityGroupRule          http-ingress
+    ├─ aws:route53/record:Record                            certificate-validation
+    ├─ aws:acm/certificateValidation:CertificateValidation  certificate-validation-dns-record
+    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ssm-messages-endpoint
+    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ssm-endpoint
+    ├─ aws:ec2/vpcEndpoint:VpcEndpoint                      ec2-messages-endpoint
+    ├─ aws:lb/loadBalancer:LoadBalancer                     webserver-lb
+    ├─ aws:lb/listener:Listener                             http-redirect-listener
+    ├─ aws:lb/listener:Listener                             https-listener
+    ├─ aws:route53/record:Record                            dns-record
     └─ pulumi:providers:aws                                 default_6_68_0
 
 Current stack outputs (2):
     OUTPUT           VALUE
     dnsRecord        ec2-asg.pulumi.joshuakite.co.uk
-    loadBalancerDns  webserver-lb-39d5f4e-443065510.eu-west-1.elb.amazonaws.com
+    loadBalancerDns  webserver-lb-2a297b4-754149993.eu-west-1.elb.amazonaws.com
 ```

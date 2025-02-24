@@ -2,3 +2,4 @@
 /node_modules/
 *.envPulumi.pulumi-ts-aws-asg-ec2-webserver.yaml
 Pulumi.pulumi-ts-aws-asg-ec2-webserver.yaml
+jk.env
