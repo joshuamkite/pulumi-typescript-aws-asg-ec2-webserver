@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import * as awsx from "@pulumi/awsx";
 import * as variables from "./variables";
 
 // Define standard tags
@@ -80,6 +79,16 @@ const httpIngressEC2 = securityGroupEC2.then(sg => new aws.ec2.SecurityGroupRule
     securityGroupId: pulumi.output(securityGroupEC2).apply(sg => sg.id)
 }));
 
+// Add ingress rule to EC2 security group to allow HTTPS from itself
+const ssmIngressRule = securityGroupEC2.then(sg => new aws.ec2.SecurityGroupRule("ssm-ingress-ec2", {
+    type: "ingress",
+    fromPort: 443,
+    toPort: 443,
+    protocol: "tcp",
+    securityGroupId: pulumi.output(securityGroupEC2).apply(sg => sg.id),
+    self: true
+}));
+
 // Add egress rule to the security group
 const egressRuleEC2 = new aws.ec2.SecurityGroupRule("egress-ec2", {
     type: "egress",
@@ -119,7 +128,9 @@ const ssmVpcEndpoint = vpc.then(vpc => new aws.ec2.VpcEndpoint("ssm-endpoint", {
     serviceName: `com.amazonaws.${variables.aws_region}.ssm`,
     vpcEndpointType: "Interface",
     securityGroupIds: pulumi.all([securityGroupEC2]).apply(([sg]) => [sg.id]),
-    subnetIds: subnetIds
+    subnetIds: subnetIds,
+    privateDnsEnabled: true,
+    tags: { ...standard_tags, Name: "ssm-endpoint" }
 }));
 
 // VPC Endpoint for EC2 messages
@@ -128,7 +139,9 @@ const ec2MessagesVpcEndpoint = vpc.then(vpc => new aws.ec2.VpcEndpoint("ec2-mess
     serviceName: `com.amazonaws.${variables.aws_region}.ec2messages`,
     vpcEndpointType: "Interface",
     securityGroupIds: pulumi.all([securityGroupEC2]).apply(([sg]) => [sg.id]),
-    subnetIds: subnetIds
+    subnetIds: subnetIds,
+    privateDnsEnabled: true,
+    tags: { ...standard_tags, Name: "ec2-mmessages" }
 }));
 
 // VPC Endpoint for SSM messages
@@ -137,7 +150,9 @@ const ssmMessagesVpcEndpoint = vpc.then(vpc => new aws.ec2.VpcEndpoint("ssm-mess
     serviceName: `com.amazonaws.${variables.aws_region}.ssmmessages`,
     vpcEndpointType: "Interface",
     securityGroupIds: pulumi.all([securityGroupEC2]).apply(([sg]) => [sg.id]),
-    subnetIds: subnetIds
+    subnetIds: subnetIds,
+    privateDnsEnabled: true,
+    tags: { ...standard_tags, Name: "ssm-messages" }
 }));
 
 // Instance profile for the EC2 instances
@@ -149,6 +164,9 @@ const instanceProfile = new aws.iam.InstanceProfile("webserver-profile", {
 // Store user data script
 const userDataScript = `#!/bin/bash
 dnf update -y
+dnf install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
 dnf install -y httpd
 systemctl start httpd
 systemctl enable httpd
@@ -166,10 +184,9 @@ const launch_template = ami.then(ami => new aws.ec2.LaunchTemplate("launch-templ
     networkInterfaces: [{
         deviceIndex: 0,
         associatePublicIpAddress: "true",
-        subnetId: subnetIds.then(ids => ids[0]),
         securityGroups: securityGroupEC2.then(sg => [sg.id])
     }],
-    tags: standard_tags
+    tags: standard_tags,
 }));
 
 // Convert standard_tags dictionary to a list of dictionaries with propagate_at_launch key
