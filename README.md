@@ -1,6 +1,11 @@
-# Pulumi AWS Auto Scaling Group TypeScript
+# Pulumi AWS Auto Scaling Group (TypeScript Version)
 
-This is a TypeScript port of my [pulumi-aws-asg](https://github.com/joshuamkite/pulumi-aws-asg) Python project. There is now also a [C# version](https://github.com/joshuamkite/pulumi-csharp-aws-asg-ec2-webserver)
+This project uses Pulumi (Typescript) to deploy and manage AWS infrastructure, including an Auto Scaling Group (ASG) of EC2 instances, an Application Load Balancer (ALB), and (optionally) DNS configuration using Route 53. The stack is designed to operate within an existing AWS VPC and utilizes specific subnets and security groups to control traffic. The infrastructure is configured to automatically scale EC2 instances and distribute traffic using the ALB, with optional DNS records managed via Route 53. The ASG serves a basic hello world webpage. The instances are managed using AWS Systems Manager (SSM) without the need for SSH access or bastion hosts.
+
+This is the Typescri[t implementation of the AWS ASG infrastructure. Other versions are available:
+- [Python version](https://github.com/joshuamkite/pulumi-aws-asg-ec2-webserver)
+- [C# version](https://github.com/joshuamkite/pulumi-csharp-aws-asg-ec2-webserver)
+- [Go version](https://github.com/joshuamkite/pulumi-go-aws-asg-ec2-webserver)
 
 ## Overview
 
